@@ -19,6 +19,8 @@ import keras
 import numpy as np
 import cv2
 from PIL import Image
+from PIL import ImageFile #cyw add
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 from .transform import change_transform_origin
 
@@ -150,7 +152,7 @@ def apply_transform(matrix, image, params):
     return output
 
 
-def resize_image(img, min_side=800, max_side=1333):
+def resize_image(img, min_side=960, max_side=1280): #cyw default min_side=800, max_side=1333
     """ Resize an image such that the size is constrained to min_side and max_side.
 
     Args

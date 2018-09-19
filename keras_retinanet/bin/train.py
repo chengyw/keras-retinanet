@@ -117,7 +117,7 @@ def create_models(backbone_retinanet, num_classes, weights, multi_gpu=0, freeze_
             'regression'    : losses.smooth_l1(),
             'classification': losses.focal()
         },
-        optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
+        optimizer=keras.optimizers.adam(lr=2e-7, clipnorm=0.001) #cyw default lr=1e-5
     )
 
     return model, training_model, prediction_model
@@ -175,9 +175,10 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
                 '{backbone}_{dataset_type}_{{epoch:02d}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type)
             ),
             verbose=1,
-            # save_best_only=True,
-            # monitor="mAP",
-            # mode='max'
+            save_best_only=True,
+            monitor="mAP",
+            mode='max',
+            period = 3
         )
         checkpoint = RedirectModel(checkpoint, model)
         callbacks.append(checkpoint)
@@ -225,7 +226,7 @@ def create_generators(args, preprocess_image):
             flip_y_chance=0.5,
         )
     else:
-        transform_generator = random_transform_generator(flip_x_chance=0.5)
+        transform_generator = random_transform_generator(flip_x_chance=0.1) #cyw: default 0.5
 
     if args.dataset_type == 'coco':
         # import here to prevent unnecessary dependency on cocoapi
@@ -246,14 +247,14 @@ def create_generators(args, preprocess_image):
     elif args.dataset_type == 'pascal':
         train_generator = PascalVocGenerator(
             args.pascal_path,
-            'trainval',
+            'train',
             transform_generator=transform_generator,
             **common_args
         )
 
         validation_generator = PascalVocGenerator(
             args.pascal_path,
-            'test',
+            'val',
             **common_args
         )
     elif args.dataset_type == 'csv':
@@ -380,21 +381,21 @@ def parse_args(args):
     group.add_argument('--weights',           help='Initialize the model with weights from a file.')
     group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
 
-    parser.add_argument('--backbone',        help='Backbone model used by retinanet.', default='resnet50', type=str)
-    parser.add_argument('--batch-size',      help='Size of the batches.', default=1, type=int)
+    parser.add_argument('--backbone',        help='Backbone model used by retinanet.', default='resnet101', type=str) #cyw: default resnet50
+    parser.add_argument('--batch-size',      help='Size of the batches.', default=2, type=int) #cyw: default 1
     parser.add_argument('--gpu',             help='Id of the GPU to use (as reported by nvidia-smi).')
-    parser.add_argument('--multi-gpu',       help='Number of GPUs to use for parallel processing.', type=int, default=0)
+    parser.add_argument('--multi-gpu',       help='Number of GPUs to use for parallel processing.', type=int, default=2) #cyw: default 0
     parser.add_argument('--multi-gpu-force', help='Extra flag needed to enable (experimental) multi-gpu support.', action='store_true')
     parser.add_argument('--epochs',          help='Number of epochs to train.', type=int, default=50)
     parser.add_argument('--steps',           help='Number of steps per epoch.', type=int, default=10000)
-    parser.add_argument('--snapshot-path',   help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
-    parser.add_argument('--tensorboard-dir', help='Log directory for Tensorboard output', default='./logs')
+    parser.add_argument('--snapshot-path',   help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots/0910')
+    parser.add_argument('--tensorboard-dir', help='Log directory for Tensorboard output', default='./snapshots/0910/logs')
     parser.add_argument('--no-snapshots',    help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',   help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--freeze-backbone', help='Freeze training of backbone layers.', action='store_true')
     parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
-    parser.add_argument('--image-min-side', help='Rescale the image so the smallest side is min_side.', type=int, default=800)
-    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
+    parser.add_argument('--image-min-side', help='Rescale the image so the smallest side is min_side.', type=int, default=960) #cyw: default 800
+    parser.add_argument('--image-max-side', help='Rescale the image if the largest side is larger than max_side.', type=int, default=1280) #cyw: default 1333
 
     return check_args(parser.parse_args(args))
 
@@ -404,6 +405,8 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     args = parse_args(args)
+    
+    print(args)
 
     # create object that stores backbone information
     backbone = models.backbone(args.backbone)
@@ -417,8 +420,9 @@ def main(args=None):
     keras.backend.tensorflow_backend.set_session(get_session())
 
     # create the generators
+    print("creating generators, this may take a second...")
     train_generator, validation_generator = create_generators(args, backbone.preprocess_image)
-
+    print("create generators finish")
     # create the model
     if args.snapshot is not None:
         print('Loading model, this may take a second...')

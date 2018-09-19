@@ -27,6 +27,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
+'''
 voc_classes = {
     'aeroplane'   : 0,
     'bicycle'     : 1,
@@ -48,6 +49,45 @@ voc_classes = {
     'sofa'        : 17,
     'train'       : 18,
     'tvmonitor'   : 19
+}
+'''
+
+#cyw comment
+voc_classes = {
+    'balishui': 0,
+    'keleguan': 1,
+    'lvliangshengzhazhi': 2,
+    'quecaonatie': 3,
+    'hongniu': 4,
+    'weitaningmengcha': 5,
+    'nongfuNFC': 6,
+    'jiaduobaoguan': 7,
+    'quchenshiyuanwei': 8,
+    'beibingyangjuqi': 9,
+    'maidongqingningkouwei': 10,
+    'xingbakemokawei': 11,
+    'meirishiliulvcha': 12,
+    'xiangcaosuda': 13,
+    'weikabingdimoka': 14,
+    'kalabaoweishengsu': 15,
+    'sanyuanchunnai': 16,
+    'lingdukele': 17,
+    'kangshifubinghongcha': 18,
+    'kuerlexiangli':19,
+    'yantaifushipingguo':20,
+    'feizixiaolizhi':21,
+    'guochanlanmei':22,
+    'ranchachunxiang':23,
+    'tianfangyetanbingfen':24,
+    'huoxingrusuanyuanwei':25,
+    'huorunmangguosuannai':26,
+    'qiandongyishenggulanmei':27,
+    'moqitaozhiyinliao':28,
+    'changqingyanmaihuangtao':29,
+    'younuolanmeiguoli':30,
+    'xiangpiaopiaoniurucha':31,
+    'weikezixiangjiao':32,
+    'yuanweidounaiweita':33
 }
 
 
